@@ -112,9 +112,54 @@ router.get('/read/:num', (req, res, next) => {
 });
 router.get('/updateform/:num', (req, res, next) => {
     let num = req.params.num;
-    res.json({
-        num: num
+    // 1. SELECT => 보여준다
+    pool.getConnection((err, conn) => {
+        if (err) {
+            return next(err)
+        }
+        let sql = "select * from board where num = ?";
+        let arr = [num];
+        conn.query(sql, arr, (err, rows) => {
+            if (err) {
+                return next(err)
+            }
+            console.log("rows=", rows);
+            conn.release();
+            let obj = {
+                title: "게시판 글 수정",
+                row: rows[0]
+            };
+            res.render('updateform', obj);
+        })
     });
 });
 
+router.post('/update', (req, res, next) => {
+    console.log('req,body=', req.body);
+    const num = req.body.num; //  writeform.ejs 에서 정의한 <input type="hidden" name="num" ...>에 정의한 값 받기
+    const writer = req.body.writer;
+    const pwd = req.body.pwd;
+    const subject = req.body.subject;
+    const content = req.body.content;
+    pool.getConnection((err, conn) => {
+        if (err) {
+            return next(err)
+        }
+        const sql = "update board set writer=?, subject=?, content=? where num=? and pwd=?";
+        const arr = [writer, subject, content, num, pwd];
+        conn.query(sql, arr, (err, result) => {
+            if (err) {
+                console.log(err);
+                return next(arr);
+            }
+            console.log("result=", result);
+            if (result.affectedRows == 1) {
+                res.redirect('/list'); // 리스트로이동
+            } else {
+                res.send("<script>alert('비밀번호가 틀려서 되돌아 갑니다.'); history.back();</script>");
+            }
+            conn.release();
+        });
+    });
+});
 module.exports = router;
