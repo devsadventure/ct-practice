@@ -14,13 +14,13 @@ const pool = mysql.createPool(obj);
 
 router.get('/', (req, res, next) => {
     res.render('index', {
-        title: 'Express'
+        title: '게시판 실습'
     });
 });
 
 router.get('/writeform', (req, res, next) => {
     res.render('writeform', {
-        title: 'Write it Down'
+        title: '글을 적어 보세요'
     });
 });
 
